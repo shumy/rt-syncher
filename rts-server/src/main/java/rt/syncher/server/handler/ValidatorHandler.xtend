@@ -10,17 +10,11 @@ class ValidatorHandler implements IComponent {
 	override def apply(PipeContext ctx) {
 		val msg = ctx.message
 		
-		if(msg.token == null) {
-			ctx.fail(name, "No mandatory field 'token'")
-		}
-		
-		if(msg.cmd == null) {
-			ctx.fail(name, "No mandatory field 'cmd'")
-		}
+		if(msg.cmd == null)
+			ctx.fail("No mandatory field 'cmd'")
 
-		if(msg.to == null) {
-			ctx.fail(name, "No mandatory field 'to'")
-		}
+		if(msg.to == null)
+			ctx.fail("No mandatory field 'to'")
 
 		ctx.next
 	}

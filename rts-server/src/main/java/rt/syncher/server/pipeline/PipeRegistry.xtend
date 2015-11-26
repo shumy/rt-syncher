@@ -4,24 +4,22 @@ import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.eventbus.EventBus
 import io.vertx.core.eventbus.MessageCodec
-import io.vertx.core.eventbus.MessageConsumer
 import io.vertx.core.spi.cluster.ClusterManager
 
 import java.util.HashMap
-import java.util.Map
 import rt.syncher.server.IComponent
 import org.eclipse.xtend.lib.annotations.Accessors
+import java.util.UUID
+import java.util.Map
 
 class PipeRegistry {
 	@Accessors(PUBLIC_GETTER) val String domain
 	@Accessors(PUBLIC_GETTER) val EventBus eb
-	
+
 	val ClusterManager mgr
 	
+	val Map<String, PipeSession> sessions 								//<token, PipeSession>
 	val services = new HashMap<String, IComponent> 						//<service, IComponent>
-	val consumers = new HashMap<String, MessageConsumer<Object>>		//<address, MessageConsumer>
-	
-	val Map<String, String> serviceSpace								//<service, user>
 	
 	new(Vertx vertx, ClusterManager mgr, String domain) {
 		this.domain = domain
@@ -31,7 +29,7 @@ class PipeRegistry {
 		this.eb.registerDefaultCodec(PipeContext, new MessageCodec<PipeContext, PipeContext>() {
 
 			override def systemCodecID() {
-				val int negative = -1 
+				val int negative = -1
 				return negative as byte
 			}
 			
@@ -45,38 +43,44 @@ class PipeRegistry {
 			}
 
 			override def decodeFromWire(int pos, Buffer buffer) {
+				println("decodeFromWire")
 				return null //not needed in this architecture
 			}
 		})
 		
-		this.serviceSpace = mgr.getSyncMap("serviceSpace")
+		this.sessions = mgr.getSyncMap("sessions")
 	}
-	
-	def installService(IComponent service) {
+
+	def getService(String service) {
+		return services.get(service)
+	}
+		
+	def addService(IComponent service) {
 		services.put(service.name, service)
 		return this
 	}
 	
-	def getService(String address) {
-		return services.get(address)
-	}
-	
-	def void bind(String address, String resourceUID) {
-		val consumer = eb.consumer(address)[
-			eb.send(resourceUID, body)
-		]
+	def createSession(String user, String service, String resourceUID) {
+		val token = UUID.randomUUID.toString
 
-		consumers.put(address, consumer)
+		val session = new PipeSession(token, user, service, resourceUID)
+		sessions.put(token, session)
+
+		return session
 	}
 	
-	def void unbind(String address) {
-		val consumer = consumers.remove(address)
-		if(consumer != null) {
-			consumer.unregister
+	def void deleteSession(PipeSession session) {
+		if (session != null && sessions.containsKey(session.token)) {
+			sessions.remove(session.token)
 		}
 	}
 	
-	def resolve(String url) {
-		return ""
+	def resolve(String token) {
+		return sessions.get(token)
+	}
+	
+	def void send(String token, PipeMessage msg) {
+		val session = resolve(token)
+		eb.send(session.resourceUid, msg.toString)
 	}
 }

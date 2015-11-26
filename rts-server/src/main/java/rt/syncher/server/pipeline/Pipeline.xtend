@@ -6,7 +6,7 @@ import rt.syncher.server.pipeline.PipeMessage
 import org.eclipse.xtend.lib.annotations.Accessors
 
 class Pipeline {
-	@Accessors(PUBLIC_GETTER) val PipeRegistry register
+	@Accessors(PUBLIC_GETTER) val PipeRegistry registry
 	@Accessors Handler<String> failHandler = null
 	
 	val handlers = new ArrayList<(PipeContext) => void>
@@ -18,18 +18,18 @@ class Pipeline {
 			try {
 				iter.next.apply(ctx)
 			} catch(RuntimeException ex) {
-				ctx.fail("mn:/pipeline", ex.message)
+				ctx.fail(ex.message)
 				return
 			}
 		}
 	}
 	
-	new(PipeRegistry register) {
-		this.register = register
+	new(PipeRegistry registry) {
+		this.registry = registry
 	}
 	
-	def createResource(String uid, () => void closeCallback, (String) => void replyCallback) {
-		return new PipeResource(uid, this, closeCallback, replyCallback)
+	def createResource(String uid, () => void closeCallback) {
+		return new PipeResource(uid, this, closeCallback)
 	}
 	
 	def void addHandler((PipeContext) => void handler) {

@@ -24,8 +24,8 @@ class PipeMessage {
 	
 	def getJson() { return msg }
 	
-	def getToken() { return msg.getInteger(TOKEN, 0) }
-		
+	def getToken() { return msg.getString(TOKEN) }
+	
 	def getId() { return msg.getInteger(ID, 0) }
 	def void setId(int id) { msg.put(ID, id) }
 	

@@ -10,7 +10,6 @@ import io.vertx.core.http.HttpServerOptions
 
 import static io.vertx.core.Vertx.*
 import rt.syncher.server.handler.ValidatorHandler
-import rt.syncher.server.handler.SessionHandler
 
 class RtsStarter extends AbstractVerticle {
 	def static void main(String[] args) {
@@ -48,11 +47,12 @@ class RtsStarter extends AbstractVerticle {
 	}
 
 	override def start() {
-		val register = new PipeRegistry(vertx, mgr, name)
+		val registry = new PipeRegistry(vertx, mgr, name) => [
+			addService(new SessionManager)
+		]
 
-		val pipeline = new Pipeline(register) => [
+		val pipeline = new Pipeline(registry) => [
 			addHandler(new ValidatorHandler)
-			addHandler(new SessionHandler)
 			failHandler = [println("PIPELINE-FAIL: " + it)]
 		]
 

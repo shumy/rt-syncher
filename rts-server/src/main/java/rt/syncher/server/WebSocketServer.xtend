@@ -11,11 +11,8 @@ class WebSocketServer {
 				ws.reject
 			}
 			
-			val () => void onClose = [ws.close]
-			val (String) => void onReply = [ws.writeFinalTextFrame(it)]
-						
 			println("WS-OPEN")
-			val resource = pipeline.createResource(ws.textHandlerID, onClose, onReply)
+			val resource = pipeline.createResource(ws.textHandlerID)[ws.close]
 			
 			ws.frameHandler[
 				resource.processMessage(new PipeMessage(textData))

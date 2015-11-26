@@ -8,12 +8,12 @@ class PipeContext {
 	@Accessors(PUBLIC_GETTER) val PipeMessage message
 	@Accessors(PUBLIC_GETTER) val PipeResource resource
 	
+	def getRegistry() { return pipeline.registry }
+	
 	boolean inFail = false
 	
 	val Pipeline pipeline
 	val Iterator<(PipeContext) => void> iter
-	
-	def getResourceUid() { return resource.uid }
 	
 	new(Pipeline pipeline, PipeResource resource, Iterator<(PipeContext) => void> iter, PipeMessage message) {
 		println("IN: " + message)
@@ -27,19 +27,35 @@ class PipeContext {
 	 *  So most of the time there is no need to call this.
 	 */
 	def void deliver() {
-		val register = pipeline.register
-		val service = register.getService(message.service)
-		
-		if(service == null) {
-			//send to internal service...
-			try {
-				service.apply(this)
-			} catch(RuntimeException ex) {
-				replyError(service.name, ex.message)
+		if(!inFail) {
+			var String serviceURL = null
+
+			val registry = pipeline.registry
+			if (message.service != null) {
+				serviceURL = message.service
+			} else {
+				val session = resource.session
+				if (session == null) {
+					replyError("No available session")
+					return
+				}
+				
+				serviceURL = session.service
 			}
-		} else {
-			println("OUT(" + message.to + "): " + message)
-			register.eb.publish(message.to, message.toString)
+			
+			println("DELIVER(" + serviceURL + "): " + message)
+			val service = registry.getService(serviceURL)	
+			if(service != null) {
+				//send to internal service...
+				try {
+					service.apply(this)
+				} catch(RuntimeException ex) {
+					ex.printStackTrace
+					replyError(ex.message)
+				}
+			} else {
+				println("NO-SERVICE(" + serviceURL + "): " + message)
+			}	
 		}
 	}
 	
@@ -47,37 +63,56 @@ class PipeContext {
 	 * @param reply Should be a new PipeMessage
 	 */
 	def void reply(PipeMessage reply) {
-		println("REPLY: " + reply)
-		resource.sendReply(reply)
+		if(!inFail) {
+			println("REPLY: " + reply)
+			resource.sendReply(reply)	
+		}
 	}
 	
 	/** Does nothing to the pipeline flow and sends a OK reply back with a pre formatted JSON schema.  
-	 * @param rFrom The address that will be on "from".
 	 */
-	def void replyOK(String rFrom, String value) {
-		val reply = new PipeMessage => [
-			id = message.id
-			cmd = PipeMessage.CMD_OK
-			from = rFrom
-			body = value
-		]
-
-		reply(reply)
+	def void replyOK() {
+		if(!inFail) {
+			val reply = new PipeMessage => [
+				id = message.id
+				cmd = PipeMessage.CMD_OK
+				from = message.to
+			]
+	
+			reply(reply)			
+		}
+	}
+	
+	/** Does nothing to the pipeline flow and sends a OK reply back with a pre formatted JSON schema.
+	 * @param value The address that will be on "from".
+	 */
+	def void replyOK(String value) {
+		if(!inFail) {
+			val reply = new PipeMessage => [
+				id = message.id
+				cmd = PipeMessage.CMD_OK
+				from = message.to
+				body = value
+			]
+	
+			reply(reply)			
+		}
 	}
 	
 	/** Does nothing to the pipeline flow and sends a ERROR reply back with a pre formatted JSON schema. 
-	 * @param rFrom The address that will be on "from".
-	 * @param rError The error descriptor message.
+	 * @param error The error descriptor message.
 	 */
-	def void replyError(String rFrom, String rError) {
-		val reply = new PipeMessage => [
-			id = message.id
-			cmd = PipeMessage.CMD_ERROR
-			from = rFrom
-			body = rError
-		]
-		
-		reply(reply)
+	def void replyError(String error) {
+		if(!inFail) {
+			val reply = new PipeMessage => [
+				id = message.id
+				cmd = PipeMessage.CMD_ERROR
+				from = message.to
+				body = error
+			]
+			
+			reply(reply)	
+		}
 	}
 	
 	/** Order the underlying resource channel to disconnect. But the client can be configured to reconnect, so most of the times a reconnection is made by the client.
@@ -95,7 +130,7 @@ class PipeContext {
 				try {
 					iter.next.apply(this)
 				} catch(RuntimeException ex) {
-					fail("mn:/pipeline", ex.message)
+					fail(ex.message)
 				}
 			} else {
 				deliver
@@ -107,10 +142,10 @@ class PipeContext {
 	 * @param from The address that will be on reply "header.from".
 	 * @param error The error descriptor message.
 	 */
-	def fail(String from, String error) {
+	def fail(String error) {
 		if(!inFail) {
 			inFail = true
-			replyError(from, error)
+			replyError(error)
 			if(pipeline.failHandler != null) {
 				pipeline.failHandler.handle(error)
 			}
