@@ -35,7 +35,7 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>1.2.1</version>
 				<configuration>
-					<mainClass>rt.syncher.server.Main</mainClass>
+					<mainClass>rt.syncher.server.RtsStarter</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
