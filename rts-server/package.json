@@ -6,7 +6,7 @@
   "main": "src/js/rts-client.js",
   "license": "http://www.apache.org/licenses/LICENSE-2.0",
   "scripts": {
-    "init-setup": "npm install -g jspm karma-cli gulp-cli && npm install && jspm init && node setup.js"
+    "preinstall": "npm install -g karma-cli gulp-cli"
   },
   "devDependencies": {
     "babelify": "^6.3.0",
