@@ -5,8 +5,10 @@
   "author": "Micael Pedrosa <micaelpedrosa@gmail.com>",
   "main": "src/js/rts-client.js",
   "license": "http://www.apache.org/licenses/LICENSE-2.0",
+  "keywords": ["rt-syncher", "rts-server", "real time syncher"],
   "scripts": {
-    "preinstall": "npm install -g karma-cli gulp-cli"
+    "preinstall": "npm install -g karma-cli gulp-cli",
+    "test": "karma start"
   },
   "devDependencies": {
     "babelify": "^6.3.0",
