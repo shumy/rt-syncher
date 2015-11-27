@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Real Time Syncher Server and js-client",
   "author": "Micael Pedrosa <micaelpedrosa@gmail.com>",
-  "main": "src/main.js",
+  "main": "src/js/rts-client.js",
   "license": "http://www.apache.org/licenses/LICENSE-2.0",
   "scripts": {
     "init-setup": "npm install -g jspm karma-cli gulp-cli && npm install && jspm init && node setup.js"
@@ -23,15 +23,5 @@
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.4.0"
-  },
-  "jspm": {
-    "directories": {
-      "packages": "jspm"
-    },
-    "devDependencies": {
-      "babel": "npm:babel-core@^5.8.24",
-      "babel-runtime": "npm:babel-runtime@^5.8.24",
-      "core-js": "npm:core-js@^1.1.4"
-    }
   }
 }
