@@ -1,0 +1,6 @@
+.git
+xtend-gen
+jspm
+target
+node_modules
+npm-debug.log

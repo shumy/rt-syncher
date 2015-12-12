@@ -11,15 +11,18 @@ import rt.syncher.server.IComponent
 import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.UUID
 import java.util.Map
+import rt.syncher.ctx.Session
+import rt.syncher.data.DService
 
 class PipeRegistry {
-	@Accessors(PUBLIC_GETTER) val String domain
-	@Accessors(PUBLIC_GETTER) val EventBus eb
+	@Accessors val String domain
+	@Accessors val EventBus eb
 
 	val ClusterManager mgr
 	
-	val Map<String, PipeSession> sessions 								//<token, PipeSession>
-	val services = new HashMap<String, IComponent> 						//<service, IComponent>
+	val Map<String, Session> sessions 								//<token, PipeSession>
+	val components = new HashMap<String, IComponent> 				//<name, IComponent>
+	val services = new HashMap<String, DService>					//<name, Dservice>
 	
 	new(Vertx vertx, ClusterManager mgr, String domain) {
 		this.domain = domain
@@ -51,25 +54,37 @@ class PipeRegistry {
 		this.sessions = mgr.getSyncMap("sessions")
 	}
 
-	def getService(String service) {
-		return services.get(service)
+	def getComponent(String component) {
+		return components.get(component)
 	}
 		
-	def addService(IComponent service) {
-		services.put(service.name, service)
+	def addComponent(IComponent component) {
+		components.put(component.name, component)
 		return this
+	}
+	
+	def getService(String name) {
+		return services.get(name)
+	}
+	
+	def void createService(DService service) {
+		services.put(service.name, service)
+	}
+	
+	def void deleteService(String name) {
+		services.remove(name)
 	}
 	
 	def createSession(String user, String service, String resourceUID) {
 		val token = UUID.randomUUID.toString
 
-		val session = new PipeSession(token, user, service, resourceUID)
+		val session = new Session(token, user, service, resourceUID)
 		sessions.put(token, session)
 
 		return session
 	}
 	
-	def void deleteSession(PipeSession session) {
+	def void deleteSession(Session session) {
 		if (session != null && sessions.containsKey(session.token)) {
 			sessions.remove(session.token)
 		}

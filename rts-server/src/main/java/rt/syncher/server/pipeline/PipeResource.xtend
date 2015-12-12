@@ -2,10 +2,11 @@ package rt.syncher.server.pipeline
 
 import rt.syncher.server.pipeline.PipeMessage
 import org.eclipse.xtend.lib.annotations.Accessors
+import rt.syncher.ctx.Session
 
 class PipeResource {
-	@Accessors(PUBLIC_GETTER) val String uid
-	@Accessors PipeSession session
+	@Accessors val String uid
+	@Accessors Session session
 	
 	val Pipeline pipeline
 	val () => void closeCallback

@@ -29,6 +29,6 @@ describe('SessionManager', function() {
 			}
 		});
 
-		client.login('shumy', 'password');
+		client.login('shumy', 'password', 'game');
 	});
 });

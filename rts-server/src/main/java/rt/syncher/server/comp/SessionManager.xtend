@@ -1,9 +1,9 @@
-package rt.syncher.server
-
+package rt.syncher.server.comp
 import rt.syncher.server.pipeline.PipeContext
+import rt.syncher.server.IComponent
 
 class SessionManager implements IComponent {
-	override def getName() { return "serv:session" }
+	override def getName() { return "session" }
 	
 	override def apply(PipeContext ctx) {
 		val msg = ctx.message

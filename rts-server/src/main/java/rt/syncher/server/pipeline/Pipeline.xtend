@@ -6,7 +6,7 @@ import rt.syncher.server.pipeline.PipeMessage
 import org.eclipse.xtend.lib.annotations.Accessors
 
 class Pipeline {
-	@Accessors(PUBLIC_GETTER) val PipeRegistry registry
+	@Accessors val PipeRegistry registry
 	@Accessors Handler<String> failHandler = null
 	
 	val handlers = new ArrayList<(PipeContext) => void>

@@ -1,0 +1,80 @@
+//ws connection is bound to a service. No need to add service in the message!
+
+// cmd   -> { id: <msg id>, to: 'cmd', entity: 'unit:10', cmd: 'fire', args: ['missile'] }
+// reply -> { id: <msg id>, from: 'cmd', body: <return value> }
+
+
+// change commands -> [
+	create (an entity into a table),
+	delete (an entity from a table),
+	update (a field from an entity),
+	add (a ref to a reflist),
+	remove (a ref from a reflist)
+]
+
+// create -> { id: '<msg id>', cmd: 'create', entity: 'unit:10', data: { type: 'x-fighter', position: { x: 0, y: 0 } } }
+// delete -> { id: '<msg id>', cmd: 'delete', entity: 'unit:10' }
+// update -> { id: '<msg id>', cmd: 'update', entity: 'unit:10', field: 'position', data: { x: 10, y: 20 } }
+// add    -> { id: '<msg id>', cmd: 'add', 	entity: 'unit:10', ref-list: 'components', data: [ ... ] }
+// remove -> { id: '<msg id>', cmd: 'remove', entity: 'unit:10', ref-list: 'components', data: [ ... ] }
+
+
+//example of x-fighter creation:
+cmd    -> { id: 1, to: 'cmd', cmd: 'createUnit', args: ['x-fighter'] }
+reply  -> { id: 1, value: 10 }
+
+change -> { id: 1, cmd: 'create', entity: 'unit:10', data: { type: 'x-fighter', position: { x: 0, y: 0 } } }
+change -> { id: 2, cmd: 'add', ref-list: 'units', data: [ 10 ] }
+
+
+//build a change batch...
+
+//global available static:
+Context (users, thisUser, root, id)
+
+@Service
+class Game /* extends Service */ {
+  //generate constructor with service name parameter
+
+  @RefList Unit units
+
+  @SyncFilter def filter(Change event) {
+    //process model change events...
+    return #[thisUser, 'otherUser']
+  }
+
+  @Command def createUnit(String type) {
+    val unit = new Unit(type)
+    units += unit
+
+    return unit.id
+  }
+}
+
+@Entity("unit")
+class Unit {
+  //generate id field
+  //generate constructor with constant values
+  //generate delete method
+
+  @Field val String type
+  @Field val Point position
+
+  @RefList Component components
+
+  @Command def fire(String type) {
+    //process based on user? Context.user
+  }
+}
+
+@Entity("component")
+class Component {
+  @Field val String type
+  @Ref val Unit owner
+}
+
+//Database(tables of entities) *-- Entity(id) *-- (Field, Ref, RefList)
+
+field    -> any native value (string, int, float)
+ref      -> 'unit:10'
+reflist  -> ['unit:10', 'unit:11', ...]

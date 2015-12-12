@@ -5,10 +5,11 @@ import rt.syncher.server.pipeline.PipeMessage
 import org.eclipse.xtend.lib.annotations.Accessors
 
 class PipeContext {
-	@Accessors(PUBLIC_GETTER) val PipeMessage message
-	@Accessors(PUBLIC_GETTER) val PipeResource resource
+	@Accessors val PipeMessage message
+	@Accessors val PipeResource resource
 	
 	def getRegistry() { return pipeline.registry }
+	def getSession() { return resource.session }
 	
 	boolean inFail = false
 	
@@ -28,33 +29,17 @@ class PipeContext {
 	 */
 	def void deliver() {
 		if(!inFail) {
-			var String serviceURL = null
-
-			val registry = pipeline.registry
-			if (message.service != null) {
-				serviceURL = message.service
-			} else {
-				val session = resource.session
-				if (session == null) {
-					replyError("No available session")
-					return
-				}
-				
-				serviceURL = session.service
-			}
-			
-			println("DELIVER(" + serviceURL + "): " + message)
-			val service = registry.getService(serviceURL)	
-			if(service != null) {
-				//send to internal service...
+			val comp = registry.getComponent(message.to)
+			if(comp != null) {
+				println("DELIVER(" + message.to + "): " + message)
 				try {
-					service.apply(this)
+					comp.apply(this)
 				} catch(RuntimeException ex) {
 					ex.printStackTrace
 					replyError(ex.message)
 				}
 			} else {
-				println("NO-SERVICE(" + serviceURL + "): " + message)
+				println("NO-DELIVER(" + message.to + "): " + message)
 			}	
 		}
 	}

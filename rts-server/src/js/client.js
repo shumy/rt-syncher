@@ -43,10 +43,10 @@ export default class Client {
     }
   }
 
-  login(user, password) {
+  login(user, password, service) {
     let _this = this;
 
-    let loginMsg = { cmd: 'login', from: user, to: 'serv:session', service: 'serv:session' };
+    let loginMsg = { cmd: 'login', from: user, to: 'session', service: service };
     _this.sendMessage(loginMsg, (reply) => {
       if (reply.cmd === 'ok') {
         _this._token = reply.body;
@@ -59,7 +59,7 @@ export default class Client {
 
   logout() {
     let _this = this;
-    let logoutMsg = { cmd: 'logout', to: 'serv:session' };
+    let logoutMsg = { cmd: 'logout', to: 'session' };
     _this.sendMessage(logoutMsg, (reply) => {
       _this._publish({ cmd: 'status', body: 'connected' });
     });
